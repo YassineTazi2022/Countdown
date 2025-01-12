@@ -1,10 +1,50 @@
 import { StyleSheet, Text, View, Image } from "react-native";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import CountDown from 'react-native-countdown-component';
 import { LinearGradient } from 'expo-linear-gradient';
 
 export default function Countdown() {
   const [imageError, setImageError] = useState(false);
+  const [targetDate, setTargetDate] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [displayDate, setDisplayDate] = useState({ day: '', month: '', time: '' });
+
+  const fetchDate = async () => {
+    try {
+      const response = await fetch('https://api.mockfly.dev/mocks/00ed5a35-ebcb-44eb-99c6-b871b508de09/date');
+      const data = await response.json();
+      
+      if (data && data.dates && data.dates.length > 0) {
+        const earliestDate = new Date(Math.min(...data.dates.map(date => new Date(date))));
+        const now = new Date();
+        const diffInSeconds = Math.floor((earliestDate - now) / 1000);
+        
+        // Format date components
+        setDisplayDate({
+          day: earliestDate.getDate(),
+          month: earliestDate.toLocaleString('default', { month: 'long' }),
+          time: earliestDate.toLocaleTimeString('default', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            hour12: false
+          })
+        });
+        
+        setTargetDate(diffInSeconds > 0 ? diffInSeconds : 0);
+      }
+    } catch (error) {
+      console.error('Error fetching dates:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDate();
+  }, []);
+
+  if (isLoading) return null;
+  if (!targetDate) return null;
 
   return (
     <LinearGradient
@@ -13,29 +53,28 @@ export default function Countdown() {
       start={{ x: 0, y: 0 }}
       end={{ x: 0, y: 1 }}
     >
-      <View style={styles.dateContainer}>
-        <Text style={styles.dayText}>30</Text>
-        <Text style={styles.monthText}>March</Text>
-        <Text style={styles.timeText}>20:00</Text>
-      </View>
+<View style={styles.dateContainer}>
+  <Text style={styles.dayText}>{displayDate.day}</Text>
+  <Text style={styles.monthText}>{displayDate.month}</Text>
+  <Text style={styles.timeText}>{displayDate.time}</Text>
+</View>
       <View style={styles.countdownContainer}>
         <Text style={styles.title}>Next Draw</Text>
         <CountDown
           style={styles.countdown}
-          until={10000}
+          until={targetDate}
           onFinish={() => alert('finished')}
           onPress={() => alert('hello')}
+          timeToShow={['D', 'H', 'M', 'S']}
+          timeLabels={{d: 'Days', h: 'Hours', m: 'Minutes', s: 'Seconds'}}
           digitStyle={{
-
-            width:40,
-            height:'auto',
+            width: 40,
+            height: 'auto',
           }}
           digitTxtStyle={{
             color: '#000',
             fontSize: 30,
             fontWeight: '900',
-            
-
           }}
           separatorStyle={{
             color: '#000',
