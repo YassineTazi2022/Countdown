@@ -61,11 +61,10 @@ export default function Countdown() {
 
 const styles = StyleSheet.create({
   container: {
-    marginRight: 0,
     padding: 5,
     borderRadius: 5,
     height: 120,
-    width: '100%',
+    width: '99%',
     flexDirection: "row",
     alignItems: "center",
     justifyContent: 'flex-start',
